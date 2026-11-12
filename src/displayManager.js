@@ -4,12 +4,76 @@ import GLib from 'gi://GLib';
 export class DisplayManager {
     constructor() {
         this._proxy = null;
+        this._proxyPromise = null;
         this._signalId = null;
+        this._cancellable = new Gio.Cancellable();
         this._onMonitorsChangedCallbacks = [];
-        this._initProxy();
+
+        // Kick off asynchronous proxy initialization in the background.
+        // Zero synchronous blocking operations occur in the constructor to keep
+        // GNOME Shell extension enablement instantaneous (< 1ms).
+        this._ensureProxyAsync().catch(e => {
+            if (!this._cancellable?.is_cancelled()) {
+                console.error(`[DisplayManager] Background proxy initialization failed: ${e}`);
+            }
+        });
     }
 
-    _initProxy() {
+    _ensureProxyAsync() {
+        if (this._proxy) {
+            return Promise.resolve(this._proxy);
+        }
+        if (this._proxyPromise) {
+            return this._proxyPromise;
+        }
+
+        this._proxyPromise = new Promise((resolve, reject) => {
+            Gio.DBusProxy.new_for_bus(
+                Gio.BusType.SESSION,
+                Gio.DBusProxyFlags.NONE,
+                null,
+                'org.gnome.Mutter.DisplayConfig',
+                '/org/gnome/Mutter/DisplayConfig',
+                'org.gnome.Mutter.DisplayConfig',
+                this._cancellable,
+                (source, res) => {
+                    try {
+                        const proxy = Gio.DBusProxy.new_for_bus_finish(res);
+                        this._proxy = proxy;
+
+                        if (!this._signalId && !this._cancellable?.is_cancelled()) {
+                            this._signalId = this._proxy.connect('g-signal', (p, sender, signalName) => {
+                                if (signalName === 'MonitorsChanged') {
+                                    for (const cb of this._onMonitorsChangedCallbacks) {
+                                        try {
+                                            cb();
+                                        } catch (e) {
+                                            console.error(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        resolve(this._proxy);
+                    } catch (e) {
+                        this._proxyPromise = null;
+                        if (!this._cancellable?.is_cancelled()) {
+                            console.error(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy: ${e}`);
+                        }
+                        reject(e);
+                    }
+                }
+            );
+        });
+
+        return this._proxyPromise;
+    }
+
+    _initProxySync() {
+        if (this._proxy) {
+            return;
+        }
         try {
             this._proxy = Gio.DBusProxy.new_for_bus_sync(
                 Gio.BusType.SESSION,
@@ -21,19 +85,21 @@ export class DisplayManager {
                 null
             );
 
-            this._signalId = this._proxy.connect('g-signal', (proxy, sender, signalName) => {
-                if (signalName === 'MonitorsChanged') {
-                    for (const cb of this._onMonitorsChangedCallbacks) {
-                        try {
-                            cb();
-                        } catch (e) {
-                            console.error(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
+            if (!this._signalId) {
+                this._signalId = this._proxy.connect('g-signal', (proxy, sender, signalName) => {
+                    if (signalName === 'MonitorsChanged') {
+                        for (const cb of this._onMonitorsChangedCallbacks) {
+                            try {
+                                cb();
+                            } catch (e) {
+                                console.error(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         } catch (e) {
-            console.error(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy: ${e}`);
+            console.error(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy sync: ${e}`);
         }
     }
 
@@ -41,18 +107,12 @@ export class DisplayManager {
         this._onMonitorsChangedCallbacks.push(callback);
     }
 
-    _callMethodAsync(method, params = null) {
+    async _callMethodAsync(method, params = null) {
+        const proxy = await this._ensureProxyAsync();
         return new Promise((resolve, reject) => {
-            if (!this._proxy) {
+            proxy.call(method, params, Gio.DBusCallFlags.NONE, -1, this._cancellable, (p, res) => {
                 try {
-                    this._initProxy();
-                } catch (e) {
-                    return reject(e);
-                }
-            }
-            this._proxy.call(method, params, Gio.DBusCallFlags.NONE, -1, null, (proxy, res) => {
-                try {
-                    const reply = proxy.call_finish(res);
+                    const reply = p.call_finish(res);
                     resolve(reply);
                 } catch (e) {
                     reject(e);
@@ -94,7 +154,7 @@ export class DisplayManager {
 
     getCurrentState() {
         if (!this._proxy) {
-            this._initProxy();
+            this._initProxySync();
         }
         const res = this._proxy.call_sync('GetCurrentState', null, Gio.DBusCallFlags.NONE, -1, null);
         const [serial, monitors, logicalMonitors, properties] = res.deepUnpack();
@@ -273,11 +333,16 @@ export class DisplayManager {
     }
 
     destroy() {
+        if (this._cancellable) {
+            this._cancellable.cancel();
+            this._cancellable = null;
+        }
         if (this._signalId && this._proxy) {
             this._proxy.disconnect(this._signalId);
             this._signalId = null;
         }
         this._onMonitorsChangedCallbacks = [];
         this._proxy = null;
+        this._proxyPromise = null;
     }
 }

@@ -12,7 +12,8 @@ export class Storage {
         }
         this._file = Gio.File.new_for_path(this._filePath);
         this._dir = Gio.File.new_for_path(this._configDir);
-        this._ensureDir();
+        // Note: Do NOT create directory synchronously in constructor to prevent
+        // blocking the GNOME Shell main loop during extension initialization.
     }
 
     _ensureDir() {
@@ -23,6 +24,38 @@ export class Storage {
                 console.error(`[DisplayProfiles Storage] Error creating directory ${this._configDir}: ${e}`);
             }
         }
+    }
+
+    _ensureDirAsync(dir = this._dir) {
+        return new Promise((resolve) => {
+            dir.make_directory_async(GLib.PRIORITY_DEFAULT, null, (d, res) => {
+                try {
+                    d.make_directory_finish(res);
+                    resolve();
+                } catch (e) {
+                    if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.EXISTS)) {
+                        resolve();
+                    } else if (e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.NOT_FOUND)) {
+                        const parent = dir.get_parent();
+                        if (parent) {
+                            this._ensureDirAsync(parent).then(() => {
+                                dir.make_directory_async(GLib.PRIORITY_DEFAULT, null, (d2, res2) => {
+                                    try {
+                                        d2.make_directory_finish(res2);
+                                    } catch (_) {}
+                                    resolve();
+                                });
+                            });
+                        } else {
+                            resolve();
+                        }
+                    } else {
+                        console.error(`[DisplayProfiles Storage] Error creating directory ${this._configDir}: ${e}`);
+                        resolve();
+                    }
+                }
+            });
+        });
     }
 
     // --- Asynchronous API (Safe for GNOME Shell main loop) ---
@@ -50,9 +83,9 @@ export class Storage {
         });
     }
 
-    saveAsync(data) {
+    async saveAsync(data) {
+        await this._ensureDirAsync();
         return new Promise((resolve, reject) => {
-            this._ensureDir();
             try {
                 const text = JSON.stringify(data, null, 2);
                 const bytes = new GLib.Bytes(new TextEncoder().encode(text));
