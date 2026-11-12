@@ -1,0 +1,10 @@
+# Build and temporary files
+*.rpm
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary sandbox directories
+/tmp/gnome-sandbox-*

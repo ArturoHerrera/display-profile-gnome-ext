@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+echo "========================================================"
+echo "  GNOME Shell Isolated Sandbox Runner"
+echo "========================================================"
+
+# Verify host Wayland environment
+if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ]; then
+    echo "Error: Se requiere una sesión gráfica Wayland o X11 activa." >&2
+    exit 1
+fi
+
+# Create isolated sandbox directory
+SANDBOX_DIR="$(mktemp -d -t gnome-sandbox-XXXXXX)"
+cleanup() {
+    echo ""
+    echo "[Sandbox] Limpiando entorno aislado ($SANDBOX_DIR)..."
+    fusermount3 -u "$SANDBOX_RUNTIME/doc" 2>/dev/null || true
+    chmod -R u+rwX "$SANDBOX_DIR" 2>/dev/null || true
+    rm -rf "$SANDBOX_DIR"
+    echo "[Sandbox] Entorno limpio y seguro."
+}
+trap cleanup EXIT INT TERM
+
+# Setup isolated directories
+SANDBOX_RUNTIME="$SANDBOX_DIR/runtime"
+mkdir -m 0700 "$SANDBOX_RUNTIME"
+
+# Symlink host display sockets so Mutter Devkit window displays on the host screen
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -e "${XDG_RUNTIME_DIR:-/run/user/1000}/$WAYLAND_DISPLAY" ]; then
+    ln -s "${XDG_RUNTIME_DIR}/$WAYLAND_DISPLAY" "$SANDBOX_RUNTIME/$WAYLAND_DISPLAY"
+fi
+
+export XDG_RUNTIME_DIR="$SANDBOX_RUNTIME"
+export XDG_CONFIG_HOME="$SANDBOX_DIR/config"
+export XDG_DATA_HOME="$SANDBOX_DIR/data"
+export XDG_DATA_DIRS="/usr/local/share:/usr/share"
+
+# Copy extension files into sandbox
+EXT_TARGET_DIR="$SANDBOX_DIR/data/gnome-shell/extensions/display-profiles@local"
+mkdir -p "$EXT_TARGET_DIR"
+cp -r "$PROJECT_ROOT/src/"* "$EXT_TARGET_DIR/"
+
+echo "[Sandbox] Extensión aislada en: $EXT_TARGET_DIR"
+echo "[Sandbox] XDG_RUNTIME_DIR aislado: $SANDBOX_RUNTIME"
+
+# Check Mutter Devkit
+if [ -x "/usr/libexec/mutter-devkit" ]; then
+    echo "[Sandbox] Usando mutter-devkit del sistema."
+elif [ -f "$PROJECT_ROOT/.devkit/usr/libexec/mutter-devkit" ] && [ -f "$PROJECT_ROOT/.devkit/preload.so" ]; then
+    echo "[Sandbox] Usando mutter-devkit local con preload sandbox."
+    export LD_PRELOAD="$PROJECT_ROOT/.devkit/preload.so"
+    export MUTTER_DEVKIT_PATH="$PROJECT_ROOT/.devkit/usr/libexec/mutter-devkit"
+    export GSETTINGS_SCHEMA_DIR="$PROJECT_ROOT/.devkit/usr/share/glib-2.0/schemas:/usr/share/glib-2.0/schemas"
+else
+    echo "Advertencia: No se encontró mutter-devkit. El compositor intentará arrancar de modo estándar."
+fi
+
+# Automated self-check mode or interactive mode
+CHECK_MODE=0
+if [ "${1:-}" = "--check" ] || [ "${1:-}" = "--test" ]; then
+    CHECK_MODE=1
+fi
+
+if [ "$CHECK_MODE" -eq 1 ]; then
+    echo "[Sandbox] Modo de verificación automatizada iniciado..."
+    dbus-run-session -- bash -c '
+        gsettings set org.gnome.shell disable-user-extensions false
+        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@local\"]"
+        
+        # Start gnome-shell in background
+        gnome-shell --wayland --wayland-display wayland-nested --devkit &
+        SHELL_PID=$!
+        
+        echo "[Sandbox] Esperando inicio de GNOME Shell (PID: $SHELL_PID)..."
+        for i in {1..30}; do
+            if gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus --method org.freedesktop.DBus.GetNameOwner org.gnome.Shell >/dev/null 2>&1; then
+                echo "[Sandbox] GNOME Shell D-Bus activo y respondiendo."
+                break
+            fi
+            sleep 0.2
+        done
+        
+        # Query extension state via Shell Extension Manager
+        EXT_INFO=$(gdbus call --session --dest org.gnome.Shell.Extensions --object-path /org/gnome/Shell/Extensions --method org.gnome.Shell.Extensions.GetExtensionInfo "display-profiles@local" 2>&1 || true)
+        echo "[Sandbox] Estado de extensión en Shell:"
+        echo "$EXT_INFO"
+        
+        # Query DisplayConfig
+        DC_INFO=$(gdbus call --session --dest org.gnome.Mutter.DisplayConfig --object-path /org/gnome/Mutter/DisplayConfig --method org.gnome.Mutter.DisplayConfig.GetCurrentState 2>&1 || true)
+        echo "[Sandbox] Respuesta de org.gnome.Mutter.DisplayConfig.GetCurrentState:"
+        echo "${DC_INFO:0:200}..."
+        
+        echo "[Sandbox] Cerrando GNOME Shell de prueba..."
+        kill -TERM "$SHELL_PID" 2>/dev/null || true
+        sleep 1
+        kill -9 "$SHELL_PID" 2>/dev/null || true
+        wait "$SHELL_PID" 2>/dev/null || true
+        echo "[Sandbox] Verificación completada con éxito."
+        exit 0
+    '
+else
+    echo "[Sandbox] Iniciando GNOME Shell anidado en ventana aislada."
+    echo "[Sandbox] Para salir, simplemente cierra la ventana o presiona Ctrl+C en esta terminal."
+    echo "--------------------------------------------------------"
+    dbus-run-session -- bash -c '
+        gsettings set org.gnome.shell disable-user-extensions false
+        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@local\"]"
+        exec gnome-shell --wayland --wayland-display wayland-nested --devkit "$@"
+    '
+fi

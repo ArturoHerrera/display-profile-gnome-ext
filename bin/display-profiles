@@ -1,0 +1,215 @@
+#!/usr/bin/env -S gjs -m
+
+import { DisplayManager } from '../src/displayManager.js';
+import { Storage } from '../src/storage.js';
+import system from 'system';
+
+function printHelp() {
+    print('Uso: display-profiles <comando> [argumentos]');
+    print('');
+    print('Comandos:');
+    print('  status                         Muestra el estado actual de los monitores');
+    print('  list                           Lista los perfiles guardados');
+    print('  save <nombre> [conector]       Guarda la configuración actual del monitor como perfil');
+    print('  add <nombre> <res> <escala>    Crea un perfil con resolución y escala específicas');
+    print('                                 (Ejemplo: display-profiles add "Gaming" 2560x1440 100%)');
+    print('  apply <nombre> [conector]      Aplica un perfil guardado inmediatamente');
+    print('  delete <nombre> [conector]     Elimina un perfil');
+    print('');
+    print('Ejemplos:');
+    print('  ./bin/display-profiles status');
+    print('  ./bin/display-profiles save "Trabajo 4K"');
+    print('  ./bin/display-profiles add "Lectura 150%" 3840x2160 150%');
+    print('  ./bin/display-profiles add "Gaming 1440p" 2560x1440 100%');
+    print('  ./bin/display-profiles apply "Lectura 150%"');
+}
+
+const args = system.programArgs;
+const cmd = args[0];
+
+const dm = new DisplayManager();
+const storage = new Storage();
+
+try {
+    const monitors = dm.getMonitors();
+
+    if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
+        printHelp();
+        system.exit(0);
+    }
+
+    if (cmd === 'status') {
+        print('========================================');
+        print('  ESTADO ACTUAL DE MONITORES');
+        print('========================================');
+        for (const mon of monitors) {
+            const cur = mon.currentMode;
+            print(`Monitor: ${mon.displayName} (${mon.connector})`);
+            print(`  ID de Hardware: ${mon.hardwareId}`);
+            print(`  Resolución:     ${cur.width} × ${cur.height}`);
+            print(`  Refresco:       ${cur.rate} Hz ${cur.vrr ? '(VRR Activo)' : ''}`);
+            print(`  Escala UI:      ${Math.round(cur.scale * 100)}% (${cur.scale})`);
+            print(`  Orientación:    ${cur.transform === 0 ? 'Normal (Horizontal)' : cur.transform}`);
+            print(`  Principal:      ${cur.primary ? 'Sí' : 'No'}`);
+            print('');
+        }
+    } else if (cmd === 'list') {
+        print('========================================');
+        print('  PERFILES GUARDADOS');
+        print('========================================');
+        for (const mon of monitors) {
+            const profiles = storage.getProfiles(mon.hardwareId);
+            print(`Monitor: ${mon.displayName} (${mon.connector})`);
+            if (profiles.length === 0) {
+                print('  (No hay perfiles guardados)');
+            } else {
+                for (const p of profiles) {
+                    const isCur = (
+                        mon.currentMode.width === p.width &&
+                        mon.currentMode.height === p.height &&
+                        Math.abs(mon.currentMode.scale - p.scale) < 0.05
+                    );
+                    const marker = isCur ? ' [*ACTIVO*]' : '';
+                    print(`  - [${p.id}] "${p.name}"${marker}`);
+                    print(`      ${p.width}×${p.height} @ ${p.rate}Hz | Escala: ${Math.round(p.scale * 100)}% | VRR: ${p.vrr ? 'Sí' : 'No'}`);
+                }
+            }
+            print('');
+        }
+    } else if (cmd === 'save') {
+        const name = args[1];
+        if (!name) {
+            print('Error: Debes proporcionar un nombre para el perfil.');
+            print('Ejemplo: display-profiles save "Trabajo 4K"');
+            system.exit(1);
+        }
+
+        const connector = args[2] || monitors[0].connector;
+        const targetMon = monitors.find(m => m.connector === connector);
+        if (!targetMon) {
+            print(`Error: No se encontró el monitor con conector "${connector}"`);
+            system.exit(1);
+        }
+
+        const cur = targetMon.currentMode;
+        const profile = {
+            name,
+            width: cur.width,
+            height: cur.height,
+            rate: cur.rate,
+            vrr: cur.vrr,
+            scale: cur.scale,
+            transform: cur.transform,
+            primary: cur.primary
+        };
+
+        const saved = storage.saveProfile(targetMon.hardwareId, targetMon.displayName, profile);
+        print(`✓ Perfil "${name}" guardado exitosamente para ${targetMon.displayName} (${targetMon.connector})`);
+        print(`  Resolución: ${saved.width}×${saved.height} | Escala: ${Math.round(saved.scale * 100)}% | Refresco: ${saved.rate}Hz (VRR: ${saved.vrr})`);
+    } else if (cmd === 'add') {
+        const name = args[1];
+        const resStr = args[2];
+        const scaleStr = args[3];
+
+        if (!name || !resStr || !scaleStr) {
+            print('Error: Faltan argumentos.');
+            print('Uso: display-profiles add <nombre> <ancho>x<alto> <escala%|escala_decimal>');
+            print('Ejemplo: display-profiles add "Lectura 150%" 3840x2160 150%');
+            print('Ejemplo: display-profiles add "Gaming 1440p" 2560x1440 100%');
+            system.exit(1);
+        }
+
+        const [wStr, hStr] = resStr.toLowerCase().split('x');
+        const width = parseInt(wStr, 10);
+        const height = parseInt(hStr, 10);
+
+        let scale = parseFloat(scaleStr);
+        if (scaleStr.includes('%')) {
+            scale = parseFloat(scaleStr.replace('%', '')) / 100;
+        }
+
+        const connector = args[4] || monitors[0].connector;
+        const targetMon = monitors.find(m => m.connector === connector);
+        if (!targetMon) {
+            print(`Error: No se encontró el monitor con conector "${connector}"`);
+            system.exit(1);
+        }
+
+        // Validate mode and scale against supported list
+        const modeExists = targetMon.modes.some(m => m.width === width && m.height === height);
+        if (!modeExists) {
+            print(`Advertencia: La resolución ${width}×${height} no aparece en la lista de modos estándar de ${targetMon.connector}.`);
+        }
+
+        const profile = {
+            name,
+            width,
+            height,
+            rate: targetMon.currentMode.rate || 60,
+            vrr: targetMon.currentMode.vrr,
+            scale,
+            transform: targetMon.currentMode.transform || 0,
+            primary: targetMon.currentMode.primary
+        };
+
+        const saved = storage.saveProfile(targetMon.hardwareId, targetMon.displayName, profile);
+        print(`✓ Perfil "${name}" creado exitosamente.`);
+        print(`  Resolución: ${saved.width}×${saved.height} | Escala: ${Math.round(saved.scale * 100)}% | Refresco: ${saved.rate}Hz (VRR: ${saved.vrr})`);
+    } else if (cmd === 'apply') {
+        const name = args[1];
+        if (!name) {
+            print('Error: Debes indicar el nombre o ID del perfil que deseas aplicar.');
+            print('Ejemplo: display-profiles apply "Trabajo 4K"');
+            system.exit(1);
+        }
+
+        const connector = args[2] || monitors[0].connector;
+        const targetMon = monitors.find(m => m.connector === connector);
+        if (!targetMon) {
+            print(`Error: No se encontró el monitor con conector "${connector}"`);
+            system.exit(1);
+        }
+
+        const profiles = storage.getProfiles(targetMon.hardwareId);
+        const prof = profiles.find(p => p.name.toLowerCase() === name.toLowerCase() || p.id === name);
+        if (!prof) {
+            print(`Error: No existe el perfil "${name}" para el monitor ${targetMon.connector}`);
+            print('Usa "display-profiles list" para ver los perfiles disponibles.');
+            system.exit(1);
+        }
+
+        print(`Aplicando perfil "${prof.name}" a ${targetMon.connector}...`);
+        dm.applyMonitorProfile(targetMon.connector, prof, false);
+        storage.setActiveProfileId(targetMon.hardwareId, prof.id);
+        print(`✓ Perfil "${prof.name}" aplicado instantáneamente.`);
+    } else if (cmd === 'delete') {
+        const name = args[1];
+        if (!name) {
+            print('Error: Debes indicar el nombre o ID del perfil que deseas eliminar.');
+            system.exit(1);
+        }
+
+        const connector = args[2] || monitors[0].connector;
+        const targetMon = monitors.find(m => m.connector === connector);
+        if (!targetMon) {
+            print(`Error: No se encontró el monitor con conector "${connector}"`);
+            system.exit(1);
+        }
+
+        const profiles = storage.getProfiles(targetMon.hardwareId);
+        const prof = profiles.find(p => p.name.toLowerCase() === name.toLowerCase() || p.id === name);
+        if (!prof) {
+            print(`Error: No existe el perfil "${name}"`);
+            system.exit(1);
+        }
+
+        storage.deleteProfile(targetMon.hardwareId, prof.id);
+        print(`✓ Perfil "${prof.name}" eliminado exitosamente.`);
+    } else {
+        print(`Comando desconocido: "${cmd}"`);
+        printHelp();
+        system.exit(1);
+    }
+} finally {
+    dm.destroy();
+}
