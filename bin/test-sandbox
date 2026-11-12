@@ -14,6 +14,10 @@ if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ]; then
     exit 1
 fi
 
+HOST_XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+export HOST_XDG_RUNTIME_DIR
+export GTK_A11Y=none
+
 # Create isolated sandbox directory
 SANDBOX_DIR="$(mktemp -d -t gnome-sandbox-XXXXXX)"
 cleanup() {
@@ -30,10 +34,13 @@ trap cleanup EXIT INT TERM
 SANDBOX_RUNTIME="$SANDBOX_DIR/runtime"
 mkdir -m 0700 "$SANDBOX_RUNTIME"
 
-# Symlink host display sockets so Mutter Devkit window displays on the host screen
-if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -e "${XDG_RUNTIME_DIR:-/run/user/1000}/$WAYLAND_DISPLAY" ]; then
-    ln -s "${XDG_RUNTIME_DIR}/$WAYLAND_DISPLAY" "$SANDBOX_RUNTIME/$WAYLAND_DISPLAY"
+# Symlink host display and PipeWire sockets so Mutter Devkit window displays on the host screen
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -e "${HOST_XDG_RUNTIME_DIR}/$WAYLAND_DISPLAY" ]; then
+    ln -s "${HOST_XDG_RUNTIME_DIR}/$WAYLAND_DISPLAY" "$SANDBOX_RUNTIME/$WAYLAND_DISPLAY"
 fi
+for f in "$HOST_XDG_RUNTIME_DIR"/pipewire*; do
+    [ -e "$f" ] && ln -s "$f" "$SANDBOX_RUNTIME/$(basename "$f")" 2>/dev/null || true
+done
 
 export XDG_RUNTIME_DIR="$SANDBOX_RUNTIME"
 export XDG_CONFIG_HOME="$SANDBOX_DIR/config"
@@ -110,6 +117,6 @@ else
     dbus-run-session -- bash -c '
         gsettings set org.gnome.shell disable-user-extensions false
         gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@local\"]"
-        exec gnome-shell --wayland --wayland-display wayland-nested --devkit "$@"
+        exec gnome-shell --wayland --wayland-display wayland-nested --devkit --devkit-args "--add-monitor" "$@"
     '
 fi
