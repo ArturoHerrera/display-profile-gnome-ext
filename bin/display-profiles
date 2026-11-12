@@ -1,8 +1,35 @@
 #!/usr/bin/env -S gjs -m
+/*
+ * Display Profile Manager - CLI Utility
+ * Copyright (C) 2026 Arturo Herrera
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
 import { DisplayManager } from '../src/displayManager.js';
 import { Storage } from '../src/storage.js';
 import system from 'system';
+
+function printVersion() {
+    print('display-profiles 1.0.0 (GNU GPL-3.0-or-later)');
+    print('Copyright (C) 2026 Arturo Herrera');
+    print('License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.');
+    print('This is free software: you are free to change and redistribute it.');
+    print('There is NO WARRANTY, to the extent permitted by law.');
+}
 
 function printHelp() {
     print('Uso: display-profiles <comando> [argumentos]');
@@ -15,6 +42,8 @@ function printHelp() {
     print('                                 (Ejemplo: display-profiles add "Gaming" 2560x1440 100%)');
     print('  apply <nombre> [conector]      Aplica un perfil guardado inmediatamente');
     print('  delete <nombre> [conector]     Elimina un perfil');
+    print('  --version, -v                  Muestra la versión y licencia del programa');
+    print('  --help, -h                     Muestra esta ayuda');
     print('');
     print('Ejemplos:');
     print('  ./bin/display-profiles status');
@@ -27,16 +56,21 @@ function printHelp() {
 const args = system.programArgs;
 const cmd = args[0];
 
+if (cmd === '--version' || cmd === '-v' || cmd === 'version') {
+    printVersion();
+    system.exit(0);
+}
+
+if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
+    printHelp();
+    system.exit(0);
+}
+
 const dm = new DisplayManager();
 const storage = new Storage();
 
 try {
     const monitors = dm.getMonitors();
-
-    if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
-        printHelp();
-        system.exit(0);
-    }
 
     if (cmd === 'status') {
         print('========================================');
