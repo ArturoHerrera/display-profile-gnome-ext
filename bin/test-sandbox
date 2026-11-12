@@ -48,7 +48,7 @@ export XDG_DATA_HOME="$SANDBOX_DIR/data"
 export XDG_DATA_DIRS="/usr/local/share:/usr/share"
 
 # Copy extension files into sandbox
-EXT_TARGET_DIR="$SANDBOX_DIR/data/gnome-shell/extensions/display-profiles@local"
+EXT_TARGET_DIR="$SANDBOX_DIR/data/gnome-shell/extensions/display-profiles@arturoherrera"
 mkdir -p "$EXT_TARGET_DIR"
 cp -r "$PROJECT_ROOT/src/"* "$EXT_TARGET_DIR/"
 
@@ -77,7 +77,7 @@ if [ "$CHECK_MODE" -eq 1 ]; then
     echo "[Sandbox] Modo de verificación automatizada iniciado..."
     dbus-run-session -- bash -c '
         gsettings set org.gnome.shell disable-user-extensions false
-        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@local\"]"
+        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@arturoherrera\"]"
         
         # Start gnome-shell in background
         gnome-shell --wayland --wayland-display wayland-nested --devkit &
@@ -93,7 +93,7 @@ if [ "$CHECK_MODE" -eq 1 ]; then
         done
         
         # Query extension state via Shell Extension Manager
-        EXT_INFO=$(gdbus call --session --dest org.gnome.Shell.Extensions --object-path /org/gnome/Shell/Extensions --method org.gnome.Shell.Extensions.GetExtensionInfo "display-profiles@local" 2>&1 || true)
+        EXT_INFO=$(gdbus call --session --dest org.gnome.Shell.Extensions --object-path /org/gnome/Shell/Extensions --method org.gnome.Shell.Extensions.GetExtensionInfo "display-profiles@arturoherrera" 2>&1 || true)
         echo "[Sandbox] Estado de extensión en Shell:"
         echo "$EXT_INFO"
         
@@ -116,7 +116,7 @@ else
     echo "--------------------------------------------------------"
     dbus-run-session -- bash -c '
         gsettings set org.gnome.shell disable-user-extensions false
-        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@local\"]"
+        gsettings set org.gnome.shell enabled-extensions "[\"display-profiles@arturoherrera\"]"
         exec gnome-shell --wayland --wayland-display wayland-nested --devkit --devkit-args "--add-monitor" "$@"
     '
 fi

@@ -1,0 +1,123 @@
+# Spanish translation for display-profiles@arturoherrera.
+# Copyright (C) 2026 Arturo Herrera
+# This file is distributed under the same license as the display-profiles package.
+# Arturo Herrera <https://github.com/ArturoHerrera>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: display-profiles@arturoherrera 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/ArturoHerrera/display-profile-gnome-ext/issues\n"
+"POT-Creation-Date: 2026-11-12 12:00-0600\n"
+"PO-Revision-Date: 2026-11-12 12:00-0600\n"
+"Last-Translator: Arturo Herrera <https://github.com/ArturoHerrera>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/extension.js:27
+msgid "Save Display Profile"
+msgstr "Guardar perfil de pantalla"
+
+#: src/extension.js:35
+#, javascript-format
+msgid "UI Scale: %d%%"
+msgstr "Escala de interfaz: %d%%"
+
+#: src/extension.js:44
+msgid "Profile name (e.g. Work 4K, Gaming 1440p)"
+msgstr "Nombre del perfil (ej. Trabajo 4K, Gaming 1440p)"
+
+#: src/extension.js:53
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: src/extension.js:59
+msgid "Save"
+msgstr "Guardar"
+
+#: src/extension.js:100
+msgid "Display Profile Manager"
+msgstr "Gestor de perfiles de pantalla"
+
+#: src/extension.js:113
+msgid "Loading profiles..."
+msgstr "Cargando perfiles…"
+
+#: src/extension.js:145
+msgid "No displays detected"
+msgstr "No se detectaron pantallas"
+
+#: src/extension.js:159
+msgid "Preferences..."
+msgstr "Preferencias…"
+
+#: src/extension.js:167
+msgid "Error loading displays"
+msgstr "Error al cargar pantallas"
+
+#: src/extension.js:190 src/extension.js:259
+msgid "No saved profiles"
+msgstr "Sin perfiles guardados"
+
+#: src/extension.js:215 src/extension.js:283
+msgid "Error applying profile"
+msgstr "Error al aplicar el perfil"
+
+#: src/extension.js:226 src/extension.js:293
+msgid "Save current configuration..."
+msgstr "Guardar configuración actual…"
+
+#: src/extension.js:234 src/extension.js:300
+msgid "Delete a profile..."
+msgstr "Eliminar un perfil…"
+
+#: src/extension.js:236 src/extension.js:302
+#, javascript-format
+msgid "Delete \"%s\""
+msgstr "Eliminar «%s»"
+
+#: src/extension.js:241 src/extension.js:307
+msgid "Profile deleted"
+msgstr "Perfil eliminado"
+
+#: src/extension.js:241 src/extension.js:307
+#, javascript-format
+msgid "Profile \"%s\" deleted"
+msgstr "Se eliminó el perfil «%s»"
+
+#: src/extension.js:339
+msgid "Profile saved"
+msgstr "Perfil guardado"
+
+#: src/extension.js:339
+#, javascript-format
+msgid "Profile \"%s\" saved"
+msgstr "Se guardó el perfil «%s»"
+
+#: src/prefs.js:12
+msgid "Profiles"
+msgstr "Perfiles"
+
+#: src/prefs.js:30
+msgid "Saved Profiles"
+msgstr "Perfiles guardados"
+
+#: src/prefs.js:33
+msgid "No saved profiles found"
+msgstr "No se encontraron perfiles guardados"
+
+#: src/prefs.js:34
+msgid "Use the top bar menu to save your current display configuration."
+msgstr "Usa el menú del panel superior para guardar la configuración actual de tu pantalla."
+
+#: src/prefs.js:52
+msgid "No saved profiles for this monitor"
+msgstr "Sin perfiles guardados para este monitor"
+
+#: src/prefs.js:66
+msgid "Delete Profile"
+msgstr "Eliminar perfil"
+
