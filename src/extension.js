@@ -19,9 +19,14 @@ class ProfileSaveDialog extends ModalDialog.ModalDialog {
         this._activateSignalId = null;
 
         const content = new St.BoxLayout({
-            vertical: true,
             style: 'padding: 16px; min-width: 340px; spacing: 10px;'
         });
+        if (Clutter.Orientation) {
+            content.orientation = Clutter.Orientation.VERTICAL;
+        }
+        if ('vertical' in content) {
+            content.vertical = true;
+        }
 
         const title = new St.Label({
             text: _('Save Display Profile'),
@@ -110,7 +115,7 @@ class DisplayIndicator extends PanelMenu.Button {
         });
         this.add_child(icon);
 
-        const placeholder = new PopupMenu.PopupMenuItem(_('Loading profiles...'));
+        const placeholder = new PopupMenu.PopupMenuItem(_('Loading profiles'));
         placeholder.setSensitive(false);
         this.menu.addMenuItem(placeholder);
 
@@ -156,7 +161,7 @@ class DisplayIndicator extends PanelMenu.Button {
 
             // Global Preferences Footer
             this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            const prefsItem = new PopupMenu.PopupMenuItem(_('Preferences...'));
+            const prefsItem = new PopupMenu.PopupMenuItem(_('Preferences'));
             prefsItem.connect('activate', () => {
                 this._extension.openPreferences();
             });
@@ -198,7 +203,7 @@ class DisplayIndicator extends PanelMenu.Button {
                     Math.abs(cur.scale - prof.scale) < 0.05
                 );
 
-                const itemText = `${prof.name}   [${prof.width}×${prof.height} | ${Math.round(prof.scale * 100)}%]`;
+                const itemText = `${prof.name}   (${prof.width}×${prof.height} @ ${Math.round(prof.scale * 100)}%)`;
                 const item = new PopupMenu.PopupMenuItem(itemText);
 
                 if (isCurrent) {
@@ -223,29 +228,11 @@ class DisplayIndicator extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Action: Save Current Configuration
-        const saveItem = new PopupMenu.PopupMenuItem(_('Save current configuration...'));
+        const saveItem = new PopupMenu.PopupMenuItem(_('Save Current Configuration'));
         saveItem.connect('activate', () => {
             this._openSaveDialog(mon, cur);
         });
         this.menu.addMenuItem(saveItem);
-
-        // Action: Delete profile submenu if any exist
-        if (profiles.length > 0) {
-            const manageSubMenu = new PopupMenu.PopupSubMenuMenuItem(_('Delete a profile...'));
-            for (const prof of profiles) {
-                const delItem = new PopupMenu.PopupMenuItem(_('Delete "%s"').format(prof.name));
-                delItem.connect('activate', () => {
-                    this._storage.deleteProfileAsync(mon.hardwareId, prof.id)
-                        .then(async () => {
-                            await this._refreshMenuAsync();
-                            Main.notify(_('Profile deleted'), _('Profile "%s" deleted').format(prof.name));
-                        })
-                        .catch(console.error);
-                });
-                manageSubMenu.menu.addMenuItem(delItem);
-            }
-            this.menu.addMenuItem(manageSubMenu);
-        }
     }
 
     async _buildMultiMonitorMenu(monitors) {
@@ -267,7 +254,7 @@ class DisplayIndicator extends PanelMenu.Button {
                         Math.abs(cur.scale - prof.scale) < 0.05
                     );
 
-                    const itemText = `${prof.name}   [${prof.width}×${prof.height} | ${Math.round(prof.scale * 100)}%]`;
+                    const itemText = `${prof.name}   (${prof.width}×${prof.height} @ ${Math.round(prof.scale * 100)}%)`;
                     const item = new PopupMenu.PopupMenuItem(itemText);
                     if (isCurrent) {
                         item.setOrnament(PopupMenu.Ornament.DOT);
@@ -290,28 +277,11 @@ class DisplayIndicator extends PanelMenu.Button {
 
             monitorSubMenu.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-            const saveItem = new PopupMenu.PopupMenuItem(_('Save current configuration...'));
+            const saveItem = new PopupMenu.PopupMenuItem(_('Save Current Configuration'));
             saveItem.connect('activate', () => {
                 this._openSaveDialog(mon, cur);
             });
             monitorSubMenu.menu.addMenuItem(saveItem);
-
-            if (profiles.length > 0) {
-                const deleteSubMenu = new PopupMenu.PopupSubMenuMenuItem(_('Delete a profile...'));
-                for (const prof of profiles) {
-                    const delItem = new PopupMenu.PopupMenuItem(_('Delete "%s"').format(prof.name));
-                    delItem.connect('activate', () => {
-                        this._storage.deleteProfileAsync(mon.hardwareId, prof.id)
-                            .then(async () => {
-                                await this._refreshMenuAsync();
-                                Main.notify(_('Profile deleted'), _('Profile "%s" deleted').format(prof.name));
-                            })
-                            .catch(console.error);
-                    });
-                    deleteSubMenu.menu.addMenuItem(delItem);
-                }
-                monitorSubMenu.menu.addMenuItem(deleteSubMenu);
-            }
 
             this.menu.addMenuItem(monitorSubMenu);
         }

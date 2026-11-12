@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: display-profiles@arturoherrera 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/ArturoHerrera/display-profile-gnome-ext/issues\n"
-"POT-Creation-Date: 2026-11-12 12:00-0600\n"
+"POT-Creation-Date: 2026-11-12 13:40-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,82 +16,64 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/extension.js:27
+#: src/extension.js:32
 msgid "Save Display Profile"
 msgstr ""
 
-#: src/extension.js:35
+#: src/extension.js:40
 #, javascript-format
 msgid "UI Scale: %d%%"
 msgstr ""
 
-#: src/extension.js:44
+#: src/extension.js:49
 msgid "Profile name (e.g. Work 4K, Gaming 1440p)"
 msgstr ""
 
-#: src/extension.js:53
+#: src/extension.js:58
 msgid "Cancel"
 msgstr ""
 
-#: src/extension.js:59
+#: src/extension.js:64
 msgid "Save"
 msgstr ""
 
-#: src/extension.js:100
+#: src/extension.js:105
 msgid "Display Profile Manager"
 msgstr ""
 
-#: src/extension.js:113
-msgid "Loading profiles..."
+#: src/extension.js:118
+msgid "Loading profiles"
 msgstr ""
 
-#: src/extension.js:145
+#: src/extension.js:150
 msgid "No displays detected"
 msgstr ""
 
-#: src/extension.js:159
-msgid "Preferences..."
+#: src/extension.js:164
+msgid "Preferences"
 msgstr ""
 
-#: src/extension.js:167
+#: src/extension.js:172
 msgid "Error loading displays"
 msgstr ""
 
-#: src/extension.js:190 src/extension.js:259
+#: src/extension.js:195 src/extension.js:246
 msgid "No saved profiles"
 msgstr ""
 
-#: src/extension.js:215 src/extension.js:283
+#: src/extension.js:220 src/extension.js:270
 msgid "Error applying profile"
 msgstr ""
 
-#: src/extension.js:226 src/extension.js:293
-msgid "Save current configuration..."
+#: src/extension.js:231 src/extension.js:280
+msgid "Save Current Configuration"
 msgstr ""
 
-#: src/extension.js:234 src/extension.js:300
-msgid "Delete a profile..."
-msgstr ""
-
-#: src/extension.js:236 src/extension.js:302
-#, javascript-format
-msgid "Delete \"%s\""
-msgstr ""
-
-#: src/extension.js:241 src/extension.js:307
-msgid "Profile deleted"
-msgstr ""
-
-#: src/extension.js:241 src/extension.js:307
-#, javascript-format
-msgid "Profile \"%s\" deleted"
-msgstr ""
-
-#: src/extension.js:339
+#: src/extension.js:309
 msgid "Profile saved"
 msgstr ""
 
-#: src/extension.js:339
+#: src/extension.js:309
 #, javascript-format
 msgid "Profile \"%s\" saved"
 msgstr ""

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: display-profiles@arturoherrera 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/ArturoHerrera/display-profile-gnome-ext/issues\n"
-"POT-Creation-Date: 2026-11-12 12:00-0600\n"
-"PO-Revision-Date: 2026-11-12 12:00-0600\n"
+"POT-Creation-Date: 2026-11-12 13:40-0600\n"
+"PO-Revision-Date: 2026-11-12 13:40-0600\n"
 "Last-Translator: Arturo Herrera <https://github.com/ArturoHerrera>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -17,82 +17,64 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/extension.js:27
+#: src/extension.js:32
 msgid "Save Display Profile"
 msgstr "Guardar perfil de pantalla"
 
-#: src/extension.js:35
+#: src/extension.js:40
 #, javascript-format
 msgid "UI Scale: %d%%"
 msgstr "Escala de interfaz: %d%%"
 
-#: src/extension.js:44
+#: src/extension.js:49
 msgid "Profile name (e.g. Work 4K, Gaming 1440p)"
 msgstr "Nombre del perfil (ej. Trabajo 4K, Gaming 1440p)"
 
-#: src/extension.js:53
+#: src/extension.js:58
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: src/extension.js:59
+#: src/extension.js:64
 msgid "Save"
 msgstr "Guardar"
 
-#: src/extension.js:100
+#: src/extension.js:105
 msgid "Display Profile Manager"
 msgstr "Gestor de perfiles de pantalla"
 
-#: src/extension.js:113
-msgid "Loading profiles..."
-msgstr "Cargando perfiles…"
+#: src/extension.js:118
+msgid "Loading profiles"
+msgstr "Cargando perfiles"
 
-#: src/extension.js:145
+#: src/extension.js:150
 msgid "No displays detected"
 msgstr "No se detectaron pantallas"
 
-#: src/extension.js:159
-msgid "Preferences..."
-msgstr "Preferencias…"
+#: src/extension.js:164
+msgid "Preferences"
+msgstr "Preferencias"
 
-#: src/extension.js:167
+#: src/extension.js:172
 msgid "Error loading displays"
 msgstr "Error al cargar pantallas"
 
-#: src/extension.js:190 src/extension.js:259
+#: src/extension.js:195 src/extension.js:246
 msgid "No saved profiles"
 msgstr "Sin perfiles guardados"
 
-#: src/extension.js:215 src/extension.js:283
+#: src/extension.js:220 src/extension.js:270
 msgid "Error applying profile"
 msgstr "Error al aplicar el perfil"
 
-#: src/extension.js:226 src/extension.js:293
-msgid "Save current configuration..."
-msgstr "Guardar configuración actual…"
+#: src/extension.js:231 src/extension.js:280
+msgid "Save Current Configuration"
+msgstr "Guardar configuración actual"
 
-#: src/extension.js:234 src/extension.js:300
-msgid "Delete a profile..."
-msgstr "Eliminar un perfil…"
-
-#: src/extension.js:236 src/extension.js:302
-#, javascript-format
-msgid "Delete \"%s\""
-msgstr "Eliminar «%s»"
-
-#: src/extension.js:241 src/extension.js:307
-msgid "Profile deleted"
-msgstr "Perfil eliminado"
-
-#: src/extension.js:241 src/extension.js:307
-#, javascript-format
-msgid "Profile \"%s\" deleted"
-msgstr "Se eliminó el perfil «%s»"
-
-#: src/extension.js:339
+#: src/extension.js:309
 msgid "Profile saved"
 msgstr "Perfil guardado"
 
-#: src/extension.js:339
+#: src/extension.js:309
 #, javascript-format
 msgid "Profile \"%s\" saved"
 msgstr "Se guardó el perfil «%s»"
@@ -120,4 +102,3 @@ msgstr "Sin perfiles guardados para este monitor"
 #: src/prefs.js:66
 msgid "Delete Profile"
 msgstr "Eliminar perfil"
-
