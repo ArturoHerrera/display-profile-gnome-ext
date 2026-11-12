@@ -6,12 +6,9 @@
     "45",
     "46",
     "47",
-    "48",
-    "49",
-    "50",
-    "51"
+    "48"
   ],
-  "version": 1,
+  "version": 2,
   "url": "https://github.com/ArturoHerrera/display-profile-gnome-ext",
   "gettext-domain": "display-profiles@arturoherrera"
 }

@@ -30,6 +30,18 @@ import Clutter from 'gi://Clutter';
 import { DisplayManager } from './displayManager.js';
 import { Storage } from './storage.js';
 
+const _debug = false;
+function logError(msg) {
+    if (_debug) {
+        console.error(msg);
+    }
+}
+function logInfo(msg) {
+    if (_debug) {
+        console.log(msg);
+    }
+}
+
 const ProfileSaveDialog = GObject.registerClass(
 class ProfileSaveDialog extends ModalDialog.ModalDialog {
     _init(monitor, onSave) {
@@ -83,7 +95,7 @@ class ProfileSaveDialog extends ModalDialog.ModalDialog {
         this.addButton({
             label: _('Save'),
             action: () => {
-                const name = this._entry.get_text().trim();
+                const name = this._entry ? this._entry.get_text().trim() : '';
                 if (name.length > 0) {
                     this._onSave(name);
                     this.close();
@@ -93,7 +105,7 @@ class ProfileSaveDialog extends ModalDialog.ModalDialog {
         });
 
         this._activateSignalId = this._entry.clutter_text.connect('activate', () => {
-            const name = this._entry.get_text().trim();
+            const name = this._entry ? this._entry.get_text().trim() : '';
             if (name.length > 0) {
                 this._onSave(name);
                 this.close();
@@ -102,10 +114,6 @@ class ProfileSaveDialog extends ModalDialog.ModalDialog {
     }
 
     close() {
-        if (this._activateSignalId && this._entry?.clutter_text) {
-            this._entry.clutter_text.disconnect(this._activateSignalId);
-            this._activateSignalId = null;
-        }
         super.close();
         this.destroy();
     }
@@ -114,6 +122,10 @@ class ProfileSaveDialog extends ModalDialog.ModalDialog {
         if (this._activateSignalId && this._entry?.clutter_text) {
             this._entry.clutter_text.disconnect(this._activateSignalId);
             this._activateSignalId = null;
+        }
+        if (this._entry) {
+            this._entry.destroy();
+            this._entry = null;
         }
         super.destroy();
     }
@@ -128,6 +140,7 @@ class DisplayIndicator extends PanelMenu.Button {
         this._storage = new Storage();
         this._isLoading = false;
         this._activeDialog = null;
+        this._dialogDestroyId = null;
 
         const icon = new St.Icon({
             icon_name: 'video-display-symbolic',
@@ -142,7 +155,7 @@ class DisplayIndicator extends PanelMenu.Button {
         this._displayManager.onMonitorsChanged(() => {
             if (this.menu.isOpen) {
                 this._refreshMenuAsync().catch(err => {
-                    console.error(`[DisplayProfiles] Error updating on monitors change: ${err}`);
+                    logError(`[DisplayProfiles] Error updating on monitors change: ${err}`);
                 });
             }
         });
@@ -150,7 +163,7 @@ class DisplayIndicator extends PanelMenu.Button {
         this._openStateChangedId = this.menu.connect('open-state-changed', (menu, isOpen) => {
             if (isOpen) {
                 this._refreshMenuAsync().catch(err => {
-                    console.error(`[DisplayProfiles] Error refreshing menu: ${err}`);
+                    logError(`[DisplayProfiles] Error refreshing menu: ${err}`);
                 });
             }
         });
@@ -187,7 +200,7 @@ class DisplayIndicator extends PanelMenu.Button {
             });
             this.menu.addMenuItem(prefsItem);
         } catch (e) {
-            console.error(`[DisplayProfiles] Error retrieving monitors asynchronously: ${e}`);
+            logError(`[DisplayProfiles] Error retrieving monitors asynchronously: ${e}`);
             this.menu.removeAll();
             const errItem = new PopupMenu.PopupMenuItem(_('Error loading displays'));
             errItem.setSensitive(false);
@@ -236,7 +249,7 @@ class DisplayIndicator extends PanelMenu.Button {
                             await this._refreshMenuAsync();
                         })
                         .catch(e => {
-                            console.error(`[DisplayProfiles] Failed to apply profile ${prof.name}: ${e}`);
+                            logError(`[DisplayProfiles] Failed to apply profile ${prof.name}: ${e}`);
                             Main.notify(_('Error applying profile'), `${e.message}`);
                         });
                 });
@@ -258,7 +271,7 @@ class DisplayIndicator extends PanelMenu.Button {
     async _buildMultiMonitorMenu(monitors) {
         for (const mon of monitors) {
             const cur = mon.currentMode;
-            const subMenuTitle = `${mon.displayName || mon.connector} (${cur.width}×${cur.height} | ${Math.round(cur.scale * 100)}%)`;
+            const subMenuTitle = `${mon.displayName || mon.connector} (${cur.width}×${cur.height} | ${Math.round(cur.scale * 100)}%`;
             const monitorSubMenu = new PopupMenu.PopupSubMenuMenuItem(subMenuTitle);
 
             const profiles = await this._storage.getProfilesAsync(mon.hardwareId);
@@ -286,7 +299,7 @@ class DisplayIndicator extends PanelMenu.Button {
                                 await this._refreshMenuAsync();
                             })
                             .catch(e => {
-                                console.error(`[DisplayProfiles] Failed to apply profile ${prof.name}: ${e}`);
+                                logError(`[DisplayProfiles] Failed to apply profile ${prof.name}: ${e}`);
                                 Main.notify(_('Error applying profile'), `${e.message}`);
                             });
                     });
@@ -309,6 +322,10 @@ class DisplayIndicator extends PanelMenu.Button {
 
     _openSaveDialog(mon, cur) {
         if (this._activeDialog) {
+            if (this._dialogDestroyId) {
+                this._activeDialog.disconnect(this._dialogDestroyId);
+                this._dialogDestroyId = null;
+            }
             this._activeDialog.destroy();
             this._activeDialog = null;
         }
@@ -329,12 +346,13 @@ class DisplayIndicator extends PanelMenu.Button {
                     Main.notify(_('Profile saved'), _('Profile "%s" saved').format(profileName));
                 })
                 .catch(err => {
-                    console.error(`[DisplayProfiles] Error saving profile: ${err}`);
+                    logError(`[DisplayProfiles] Error saving profile: ${err}`);
                 });
         });
 
         this._activeDialog = dialog;
-        dialog.connect('destroy', () => {
+        this._dialogDestroyId = dialog.connect('destroy', () => {
+            this._dialogDestroyId = null;
             if (this._activeDialog === dialog) {
                 this._activeDialog = null;
             }
@@ -349,6 +367,10 @@ class DisplayIndicator extends PanelMenu.Button {
         }
 
         if (this._activeDialog) {
+            if (this._dialogDestroyId) {
+                this._activeDialog.disconnect(this._dialogDestroyId);
+                this._dialogDestroyId = null;
+            }
             this._activeDialog.destroy();
             this._activeDialog = null;
         }
@@ -364,13 +386,13 @@ class DisplayIndicator extends PanelMenu.Button {
 
 export default class DisplayProfileExtension extends Extension {
     enable() {
-        console.log(`[DisplayProfiles] Extension ${this.uuid} enabled`);
+        logInfo(`[DisplayProfiles] Extension ${this.uuid} enabled`);
         this._indicator = new DisplayIndicator(this);
         Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 
     disable() {
-        console.log(`[DisplayProfiles] Extension ${this.uuid} disabled`);
+        logInfo(`[DisplayProfiles] Extension ${this.uuid} disabled`);
         if (this._indicator) {
             this._indicator.destroy();
             this._indicator = null;

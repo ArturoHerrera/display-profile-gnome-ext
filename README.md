@@ -1,7 +1,7 @@
 # Display Profile Manager (GNOME Shell Extension & CLI)
 
 [![GNOME Shell](https://img.shields.io/badge/GNOME%20Shell-45%20--%2051-blue.svg)](https://extensions.gnome.org/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](https://github.com/ArturoHerrera/display-profile-gnome-ext)
+[![Version](https://img.shields.io/badge/Version-1.0.1-green.svg)](https://github.com/ArturoHerrera/display-profile-gnome-ext)
 [![Platform](https://img.shields.io/badge/Platform-Fedora%20%7C%20Arch%20%7C%20Ubuntu%20%7C%20Debian-lightgrey.svg)](https://fedoraproject.org/)
 [![Compositor](https://img.shields.io/badge/Display%20Server-Wayland%20Native-brightgreen.svg)](https://wayland.freedesktop.org/)
 [![License](https://img.shields.io/badge/License-GPL--3.0--or--later-orange.svg)](LICENSE)

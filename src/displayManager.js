@@ -21,6 +21,13 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
+const _debug = false;
+function logError(msg) {
+    if (_debug) {
+        console.error(msg);
+    }
+}
+
 export class DisplayManager {
     constructor() {
         this._proxy = null;
@@ -34,7 +41,7 @@ export class DisplayManager {
         // GNOME Shell extension enablement instantaneous (< 1ms).
         this._ensureProxyAsync().catch(e => {
             if (!this._cancellable?.is_cancelled()) {
-                console.error(`[DisplayManager] Background proxy initialization failed: ${e}`);
+                logError(`[DisplayManager] Background proxy initialization failed: ${e}`);
             }
         });
     }
@@ -68,7 +75,7 @@ export class DisplayManager {
                                         try {
                                             cb();
                                         } catch (e) {
-                                            console.error(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
+                                            logError(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
                                         }
                                     }
                                 }
@@ -79,7 +86,7 @@ export class DisplayManager {
                     } catch (e) {
                         this._proxyPromise = null;
                         if (!this._cancellable?.is_cancelled()) {
-                            console.error(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy: ${e}`);
+                            logError(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy: ${e}`);
                         }
                         reject(e);
                     }
@@ -112,14 +119,14 @@ export class DisplayManager {
                             try {
                                 cb();
                             } catch (e) {
-                                console.error(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
+                                logError(`[DisplayManager] Error in MonitorsChanged callback: ${e}`);
                             }
                         }
                     }
                 });
             }
         } catch (e) {
-            console.error(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy sync: ${e}`);
+            logError(`[DisplayManager] Failed to initialize Mutter DisplayConfig proxy sync: ${e}`);
         }
     }
 

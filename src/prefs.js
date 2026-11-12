@@ -23,6 +23,13 @@ import Gtk from 'gi://Gtk';
 import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import { Storage } from './storage.js';
 
+const _debug = false;
+function logError(msg) {
+    if (_debug) {
+        console.error(msg);
+    }
+}
+
 export default class DisplayProfilesPreferences extends ExtensionPreferences {
     async fillPreferencesWindow(window) {
         window.set_default_size(680, 500);
@@ -38,7 +45,7 @@ export default class DisplayProfilesPreferences extends ExtensionPreferences {
         try {
             data = await storage.loadAsync();
         } catch (e) {
-            console.error(`[DisplayProfiles Prefs] Failed to load profiles: ${e}`);
+            logError(`[DisplayProfiles Prefs] Failed to load profiles: ${e}`);
             data = { monitors: {} };
         }
 
@@ -92,7 +99,7 @@ export default class DisplayProfilesPreferences extends ExtensionPreferences {
                             await storage.deleteProfileAsync(hwId, prof.id);
                             group.remove(row);
                         } catch (err) {
-                            console.error(`[DisplayProfiles Prefs] Error deleting profile: ${err}`);
+                            logError(`[DisplayProfiles Prefs] Error deleting profile: ${err}`);
                             deleteButton.set_sensitive(true);
                         }
                     });
