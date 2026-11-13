@@ -1,7 +1,7 @@
 # Display Profile Manager (GNOME Shell Extension & CLI)
 
 [![GNOME Shell](https://img.shields.io/badge/GNOME%20Shell-45%20--%2051-blue.svg)](https://extensions.gnome.org/)
-[![Version](https://img.shields.io/badge/Version-1.0.1-green.svg)](https://github.com/ArturoHerrera/display-profile-gnome-ext)
+[![Version](https://img.shields.io/badge/Version-1.0.2-green.svg)](https://github.com/ArturoHerrera/display-profile-gnome-ext)
 [![Platform](https://img.shields.io/badge/Platform-Fedora%20%7C%20Arch%20%7C%20Ubuntu%20%7C%20Debian-lightgrey.svg)](https://fedoraproject.org/)
 [![Compositor](https://img.shields.io/badge/Display%20Server-Wayland%20Native-brightgreen.svg)](https://wayland.freedesktop.org/)
 [![License](https://img.shields.io/badge/License-GPL--3.0--or--later-orange.svg)](LICENSE)
@@ -103,7 +103,9 @@ Open via the quick menu's **Preferences** button or run:
 gnome-extensions prefs display-profiles@arturoherrera
 ```
 
-The preferences window displays grouped cards for each connected monitor and allows one-click profile deletion with immediate persistence to `~/.config/display-profiles/profiles.json`.
+The preferences window provides two dedicated Libadwaita tabs:
+- **Profiles (`video-display-symbolic`):** Displays grouped cards for each connected monitor and allows one-click profile deletion with immediate persistence to `~/.config/display-profiles/profiles.json`.
+- **About (`help-about-symbolic`):** Displays extension name, release version (`v1.0.2` / `EGO v3`), author credits (**Arturo Herrera**), GPL-3.0 licensing, and an interactive link directly to the [GitHub project repository](https://github.com/ArturoHerrera/display-profile-gnome-ext).
 
 ---
 
@@ -212,6 +214,7 @@ This compiles gettext catalogs (`po/` → `src/locale/`) and packages the extens
 │       └── cli-overview.svg
 ├── bin/
 │   ├── display-profiles        # Standalone GJS CLI utility
+│   ├── lint-shexli             # Isolated Shexli static analysis linter
 │   ├── pack-ego                # Official extensions.gnome.org packager
 │   └── test-sandbox            # Isolated nested Wayland sandbox test runner
 ├── src/

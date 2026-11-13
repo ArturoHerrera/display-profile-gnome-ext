@@ -24,7 +24,7 @@ import { Storage } from '../src/storage.js';
 import system from 'system';
 
 function printVersion() {
-    print('display-profiles 1.0.1 (GNU GPL-3.0-or-later)');
+    print('display-profiles 1.0.2 (GNU GPL-3.0-or-later)');
     print('Copyright (C) 2026 Arturo Herrera');
     print('License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.');
     print('This is free software: you are free to change and redistribute it.');

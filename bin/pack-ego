@@ -6,7 +6,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "=================================================="
 echo "  EMPAQUETADOR OFICIAL PARA EXTENSIONS.GNOME.ORG"
-echo "  display-profiles@arturoherrera (v1.0.1 / EGO v2)"
+echo "  display-profiles@arturoherrera (v1.0.2 / EGO v3)"
 echo "=================================================="
 
 DIST_DIR="$PROJECT_ROOT/dist"

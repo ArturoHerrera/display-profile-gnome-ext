@@ -102,3 +102,31 @@ msgstr "Sin perfiles guardados para este monitor"
 #: src/prefs.js:66
 msgid "Delete Profile"
 msgstr "Eliminar perfil"
+
+#: src/prefs.js:120
+msgid "About"
+msgstr "Acerca de"
+
+#: src/prefs.js:126
+msgid "Manage and switch display resolution, UI scaling, refresh rate, and orientation per monitor instantly."
+msgstr "Administra y cambia instantáneamente la resolución de pantalla, escala de interfaz, tasa de refresco y orientación por monitor."
+
+#: src/prefs.js:132
+msgid "Version"
+msgstr "Versión"
+
+#: src/prefs.js:138
+msgid "Author & Credits"
+msgstr "Autor y créditos"
+
+#: src/prefs.js:144
+msgid "License"
+msgstr "Licencia"
+
+#: src/prefs.js:150
+msgid "GitHub Repository"
+msgstr "Repositorio en GitHub"
+
+#: src/prefs.js:158
+msgid "Open in browser"
+msgstr "Abrir en el navegador"
