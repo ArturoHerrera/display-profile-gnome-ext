@@ -9,3 +9,6 @@
 # Temporary sandbox directories
 /tmp/gnome-sandbox-*
 
+# Virtual environments
+.venv*
+

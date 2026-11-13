@@ -78,11 +78,11 @@ The extension SHALL provide a standard preferences module `prefs.js` using `Adw.
 - **THEN** an Adwaita preferences window displays connected monitors and their saved profiles, allowing one-click profile deletion with instant disk synchronization
 
 ### Requirement: Compliant EGO distribution packaging
-The project SHALL provide an automated packaging tool (`bin/pack-ego`) that compiles gettext translation files (`po/*.po`) into binary catalogs (`locale/*/LC_MESSAGES/*.mo`) and bundles the extension using `gnome-extensions pack` into a distributable archive ready for upload to extensions.gnome.org.
+The project SHALL provide an automated packaging tool (`bin/pack-ego`) that compiles gettext translation files (`po/*.po`) into binary catalogs (`locale/*/LC_MESSAGES/*.mo`), bundles the extension using `gnome-extensions pack` into a distributable archive ready for upload to extensions.gnome.org, and verifies the bundle against Shexli static analysis.
 
 #### Scenario: Building distribution package
 - **WHEN** the developer executes `bin/pack-ego`
-- **THEN** gettext `.mo` files are compiled, schema assets and sources are packaged via `gnome-extensions pack`, and a valid `.shell-extension.zip` is created in `dist/` passing all EGO static validation checks
+- **THEN** gettext `.mo` files are compiled, schema assets and sources are packaged via `gnome-extensions pack`, and a valid `.shell-extension.zip` is created in `dist/` passing EGO static validation checks
 
 ### Requirement: Non-blocking asynchronous extension lifecycle initialization
 The system SHALL complete `extension.enable()` and indicator instantiation synchronously in under 5 milliseconds with zero synchronous D-Bus calls and zero synchronous disk I/O, ensuring that GNOME Shell startup and login responsiveness are unaffected.
@@ -126,4 +126,9 @@ The companion command-line utility `bin/display-profiles` SHALL respond to `--ve
 - **WHEN** the user executes `display-profiles --version` or `display-profiles -v`
 - **THEN** the utility outputs `display-profiles 1.0.0 (GNU GPL-3.0-or-later)` and exits cleanly with code 0
 
+### Requirement: Shexli static analysis audit
+The project SHALL provide an automated verification script or task that runs the Shexli static analyzer against the extension bundle to ensure zero lifecycle leaks, zero unsafe subprocess executions, and zero deprecated API usages.
 
+#### Scenario: Running Shexli static audit
+- **WHEN** the static analysis audit is executed against the extension sources
+- **THEN** Shexli evaluates AST reachability, lifecycle hooks (`enable` and `disable`), GObject signal disconnections, and metadata compliance, producing a clean exit status without critical errors

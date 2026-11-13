@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# Display Profile Manager - Shexli Static Analysis Runner
+# Copyright (C) 2026 Arturo Herrera
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+VENV_DIR="$PROJECT_ROOT/.venv-shexli"
+RAW_TARGET="${1:-$PROJECT_ROOT/src}"
+
+# Resolve target path to absolute path
+if [[ -d "$RAW_TARGET" || -f "$RAW_TARGET" ]]; then
+    TARGET_PATH="$(cd "$(dirname "$RAW_TARGET")" && pwd)/$(basename "$RAW_TARGET")"
+else
+    TARGET_PATH="$RAW_TARGET"
+fi
+
+# 1. Ensure Python 3.12+ virtualenv exists
+if [[ ! -f "$VENV_DIR/bin/shexli" ]]; then
+    echo "[Shexli] Provisioning isolated Python 3.12+ virtual environment (.venv-shexli)..."
+    if command -v podman >/dev/null 2>&1; then
+        podman run --rm -v "$PROJECT_ROOT:/app:Z" -w /app docker.io/library/python:3.12-slim bash -c "
+            python3 -m venv .venv-shexli
+            .venv-shexli/bin/pip install -q shexli
+        "
+    else
+        echo "Error: se requiere Podman o Python 3.12 para provisionar Shexli." >&2
+        exit 1
+    fi
+fi
+
+# 2. Ensure Shexli recognizes GNOME Shell 51
+if [[ -f "$VENV_DIR/lib/python3.12/site-packages/shexli/analyzer/rules/metadata.py" ]]; then
+    METADATA_RULE="$VENV_DIR/lib/python3.12/site-packages/shexli/analyzer/rules/metadata.py"
+    if grep -q 'if major > 50:' "$METADATA_RULE" 2>/dev/null; then
+        echo "[Shexli] Updating version threshold for GNOME Shell 51 in analyzer rule..."
+        sed -i 's/if major > 50:/if major > 51:/' "$METADATA_RULE"
+    fi
+fi
+
+# 3. Execute Shexli
+echo "[Shexli] Running static analysis against: $TARGET_PATH"
+if command -v podman >/dev/null 2>&1; then
+    CONTAINER_TARGET="/app${TARGET_PATH#$PROJECT_ROOT}"
+    podman run --rm -v "$PROJECT_ROOT:/app:Z" -w /app docker.io/library/python:3.12-slim \
+        .venv-shexli/bin/shexli "$CONTAINER_TARGET"
+else
+    "$VENV_DIR/bin/shexli" "$TARGET_PATH"
+fi
